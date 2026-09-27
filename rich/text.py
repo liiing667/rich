@@ -1198,6 +1198,29 @@ class Text(JupyterMixin):
         self._text = [self.plain[:-amount]]
         self._length -= amount
 
+    def wrap_line(self, width: int, *, fold: bool = True) -> "Lines":
+        """Wrap a single line of text (containing no newlines) to a given cell width.
+
+        This is the line-breaking decision layer: it combines the pure break
+        offsets from :func:`rich._wrap.divide_line` (a function of text and
+        width only) with the span-aware split of :meth:`Text.divide`. It
+        requires no console, so the positions at which a line will break may
+        be examined in isolation.
+
+        Args:
+            width (int): Number of cells available per line.
+            fold (bool, optional): Fold words that are longer than the
+                available width on to new lines. Defaults to True.
+
+        Returns:
+            Lines: The line divided at the computed break offsets.
+        """
+        offsets = divide_line(str(self), width, fold=fold)
+        new_lines = self.divide(offsets)
+        for line in new_lines:
+            line.rstrip_end(width)
+        return new_lines
+
     def wrap(
         self,
         console: "Console",
@@ -1236,10 +1259,7 @@ class Text(JupyterMixin):
                     continue
                 new_lines = Lines([line])
             else:
-                offsets = divide_line(str(line), width, fold=wrap_overflow == "fold")
-                new_lines = line.divide(offsets)
-                for line in new_lines:
-                    line.rstrip_end(width)
+                new_lines = line.wrap_line(width, fold=wrap_overflow == "fold")
             if wrap_justify:
                 new_lines.justify(
                     console, width, justify=wrap_justify, overflow=wrap_overflow

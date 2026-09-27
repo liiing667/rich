@@ -1,3 +1,11 @@
+"""Word wrapping layer.
+
+This module sits between the cell-width layer (:mod:`rich.cells`) and the
+text layer (:mod:`rich.text`). Its functions are pure: they depend only on
+the text and the available cell width, never on a console, so the positions
+at which a line will break can be computed (and tested) in isolation.
+"""
+
 from __future__ import annotations
 
 import re
